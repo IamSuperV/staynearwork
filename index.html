@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NearDesk — Move Closer to What Matters</title>
+    <meta name="description" content="Find verified stays, food, facilities, and room options near your workplace. NearDesk helps you settle near work.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="18" stroke="#7C3AED" stroke-width="3" fill="none"/>
+                    <circle cx="20" cy="14" r="5" fill="#7C3AED"/>
+                    <path d="M10 30c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="#7C3AED" stroke-width="3" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span>NearDesk</span>
+            </div>
+            <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- Background Particles -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- ==================== STEP 1: HERO ==================== -->
+    <section class="step step-hero active" data-step="0" id="step-hero">
+        <div class="step-bg">
+            <img src="images/hero.png" alt="Hero background" class="step-bg-img" />
+            <div class="step-bg-overlay"></div>
+        </div>
+        
+        <nav class="navbar">
+            <div class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="18" stroke="#7C3AED" stroke-width="3" fill="none"/>
+                    <circle cx="20" cy="14" r="5" fill="#7C3AED"/>
+                    <path d="M10 30c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="#7C3AED" stroke-width="3" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span>NearDesk</span>
+            </div>
+            <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </nav>
+
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-headline">
+                    Move closer<br>to what <span class="text-gradient">matters.</span>
+                </h1>
+                <p class="hero-sub">
+                    Find the perfect stay, great food<br>
+                    and everything you need near<br>
+                    your workplace.
+                </p>
+            </div>
+
+            <div class="hero-search">
+                <label class="search-label" for="company-input">Where are you joining?</label>
+                <div class="search-box">
+                    <input type="text" id="company-input" placeholder="Enter company name" autocomplete="off" />
+                    <button class="search-btn" id="search-btn" aria-label="Search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-suggestions" id="search-suggestions">
+                    <div class="suggestion" data-company="TCS Hinjewadi Pune">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        TCS Hinjewadi Pune
+                    </div>
+                    <div class="suggestion" data-company="Infosys Hinjewadi">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Infosys Hinjewadi
+                    </div>
+                    <div class="suggestion" data-company="Wipro Kharadi">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Wipro Kharadi
+                    </div>
+                    <div class="suggestion" data-company="Cognizant Magarpatta">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Cognizant Magarpatta
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-indicator hero-indicator">
+            <span class="step-num">01</span> / <span class="step-total">06</span>
+        </div>
+    </section>
+
+    <!-- ==================== STEP 2: COMPANY ==================== -->
+    <section class="step step-company" data-step="1" id="step-company">
+        <div class="step-bg">
+            <img src="images/company.png" alt="Company scene" class="step-bg-img" />
+            <div class="step-bg-overlay step-bg-overlay-light"></div>
+        </div>
+
+        <div class="step-header">
+            <div class="progress-bar">
+                <div class="progress-dots">
+                    <div class="progress-dot active" data-target="1">
+                        <span class="dot-num">01</span>
+                        <span class="dot-label">Company</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="2">
+                        <span class="dot-num">02</span>
+                        <span class="dot-label">Food</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="3">
+                        <span class="dot-num">03</span>
+                        <span class="dot-label">Facilities</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="4">
+                        <span class="dot-num">04</span>
+                        <span class="dot-label">Room</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content company-content">
+            <h2 class="section-title">Where are you joining?</h2>
+            <div class="company-search-display">
+                <div class="company-search-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <span class="company-name-display" id="company-name-display">TCS Hinjewadi Pune</span>
+            </div>
+
+            <div class="company-info-card" id="company-info-card">
+                <div class="company-card-header">
+                    <h3>Great choice!</h3>
+                    <div class="company-stat">
+                        <div class="stat-avatars">
+                            <div class="avatar" style="background: #7C3AED;"></div>
+                            <div class="avatar" style="background: #a78bfa;"></div>
+                            <div class="avatar" style="background: #c4b5fd;"></div>
+                            <div class="avatar" style="background: #ddd6fe;"></div>
+                        </div>
+                        <span class="stat-count">+2461</span>
+                    </div>
+                </div>
+                <p class="company-card-desc">
+                    <strong>2,451 people</strong> from TCS already staying nearby
+                </p>
+                <div class="trust-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <span>Verified by employees</span>
+                </div>
+            </div>
+
+            <div class="route-animation" id="route-animation">
+                <div class="route-line">
+                    <div class="route-dot route-dot-start"></div>
+                    <div class="route-path"></div>
+                    <div class="route-dot route-dot-end"></div>
+                </div>
+                <div class="route-labels">
+                    <span>Your stay</span>
+                    <span>2 min walk</span>
+                    <span>TCS Office</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-nav">
+            <div class="step-indicator">
+                <span class="step-num">02</span> / <span class="step-total">06</span>
+            </div>
+            <button class="next-btn" id="btn-to-food" aria-label="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== STEP 3: FOOD ==================== -->
+    <section class="step step-food" data-step="2" id="step-food">
+        <div class="step-bg">
+            <img src="images/food.png" alt="Food scene" class="step-bg-img" />
+            <div class="step-bg-overlay step-bg-overlay-dark"></div>
+        </div>
+
+        <div class="step-header">
+            <div class="progress-bar">
+                <div class="progress-dots">
+                    <div class="progress-dot completed" data-target="1"><span class="dot-num">01</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot active" data-target="2">
+                        <span class="dot-num">02</span>
+                        <span class="dot-label">Food</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="3"><span class="dot-num">03</span><span class="dot-label">Facilities</span></div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="4"><span class="dot-num">04</span><span class="dot-label">Room</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content food-content">
+            <h2 class="section-title">Let's find you great food</h2>
+            <p class="section-subtitle">Plenty of tasty and affordable options around your workplace.</p>
+
+            <div class="view-toggle-container">
+                <button class="view-toggle-btn active" data-view="list">List View</button>
+                <button class="view-toggle-btn" data-view="map">Map View</button>
+            </div>
+
+            <div id="food-list-view">
+                <div class="food-tabs" id="food-tabs">
+                <button class="food-tab active" data-type="all">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+                    <span>All</span>
+                </button>
+                <button class="food-tab" data-type="mess">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/></svg>
+                    <span>Mess</span>
+                </button>
+                <button class="food-tab" data-type="tiffin">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-4.59-4.45-5.47-7.52-5.84L7.8 8.1H1v2.01h5.03C9.52 10.11 16.03 10.79 16.03 14.99z"/></svg>
+                    <span>Tiffin</span>
+                </button>
+                <button class="food-tab" data-type="cafes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.9 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM2 21h18v-2H2v2z"/></svg>
+                    <span>Cafes</span>
+                </button>
+                <button class="food-tab" data-type="restaurants">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+                    <span>Restaurants</span>
+                </button>
+            </div>
+
+            <div class="food-cards" id="food-cards">
+                <div class="food-card" data-type="mess">
+                    <div class="food-card-img">
+                        <img src="images/food.png" alt="Sai Krishna Mess" />
+                        <span class="food-badge veg">Veg</span>
+                    </div>
+                    <div class="food-card-info">
+                        <h4>Sai Krishna Mess</h4>
+                        <div class="food-rating">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <span>4.6</span>
+                            <span class="rating-count">(312)</span>
+                        </div>
+                        <div class="food-meta">
+                            <span class="food-meals">Breakfast • Lunch • Dinner</span>
+                            <span class="food-distance">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                3 min walk
+                            </span>
+                        </div>
+                        <div class="food-price">
+                            <span class="price-amount">₹3,200</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="food-card" data-type="tiffin">
+                    <div class="food-card-img">
+                        <img src="images/food.png" alt="Annapurna Tiffin" />
+                        <span class="food-badge home">Home-style</span>
+                    </div>
+                    <div class="food-card-info">
+                        <h4>Annapurna Tiffin</h4>
+                        <div class="food-rating">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <span>4.8</span>
+                            <span class="rating-count">(189)</span>
+                        </div>
+                        <div class="food-meta">
+                            <span class="food-meals">Lunch • Dinner</span>
+                            <span class="food-distance">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                5 min walk
+                            </span>
+                        </div>
+                        <div class="food-price">
+                            <span class="price-amount">₹2,800</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="food-card" data-type="cafes">
+                    <div class="food-card-img">
+                        <img src="images/food.png" alt="Cafe Starter" />
+                        <span class="food-badge nonveg">Non-Veg</span>
+                    </div>
+                    <div class="food-card-info">
+                        <h4>Starter Cafe & Bites</h4>
+                        <div class="food-rating">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <span>4.3</span>
+                            <span class="rating-count">(95)</span>
+                        </div>
+                        <div class="food-meta">
+                            <span class="food-meals">Open till 12 AM</span>
+                            <span class="food-distance">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                7 min walk
+                            </span>
+                        </div>
+                        <div class="food-price">
+                            <span class="price-amount">₹4,500</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div id="food-map-view" style="display: none;">
+                <div class="map-visual food-map-visual">
+                    <div class="map-grid">
+                        <div class="map-road map-road-h" style="top: 30%"></div>
+                        <div class="map-road map-road-v" style="left: 40%"></div>
+                        <div class="map-road map-road-h" style="top: 60%"></div>
+                    </div>
+                    <div class="map-pin food-pin" style="top: 20%; left: 20%;">
+                        <div class="map-pin-label"><strong>Sai Krishna Mess</strong><span>₹3,200/mo</span></div>
+                    </div>
+                    <div class="map-pin food-pin" style="top: 40%; left: 60%;">
+                        <div class="map-pin-label"><strong>Annapurna Tiffin</strong><span>₹2,800/mo</span></div>
+                    </div>
+                    <div class="map-pin gym-pin" style="top: 70%; left: 20%;">
+                        <div class="map-pin-label"><strong>Fitness Pro Gym</strong><span>Imp Need</span></div>
+                    </div>
+                    <div class="map-pin shop-pin" style="top: 50%; left: 80%;">
+                        <div class="map-pin-label"><strong>Style Haircut</strong><span>Imp Need</span></div>
+                    </div>
+                    <div class="map-pin map-pin-office" style="top: 45%; left: 40%;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#7C3AED"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        <div class="map-pin-label"><strong>Office</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-nav">
+            <div class="step-indicator">
+                <span class="step-num">03</span> / <span class="step-total">06</span>
+            </div>
+            <button class="next-btn" id="btn-to-facilities" aria-label="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== STEP 4: FACILITIES ==================== -->
+    <section class="step step-facilities" data-step="3" id="step-facilities">
+        <div class="step-bg step-bg-gradient">
+            <div class="step-bg-overlay step-bg-overlay-purple"></div>
+        </div>
+
+        <div class="step-header">
+            <div class="progress-bar">
+                <div class="progress-dots">
+                    <div class="progress-dot completed" data-target="1"><span class="dot-num">01</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="2"><span class="dot-num">02</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot active" data-target="3">
+                        <span class="dot-num">03</span>
+                        <span class="dot-label">Facilities</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="4"><span class="dot-num">04</span><span class="dot-label">Room</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content facilities-content">
+            <h2 class="section-title">Choose the facilities<br>you care about</h2>
+            <p class="section-subtitle">We'll show stays that match your lifestyle.</p>
+
+            <div class="facilities-grid" id="facilities-grid">
+                <div class="facility-tile selected" data-facility="wifi">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                    </div>
+                    <span>Wi-Fi</span>
+                </div>
+                <div class="facility-tile" data-facility="ac">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M22 11h-4.17l3.24-3.24-1.41-1.42L15 11h-2V9l4.66-4.66-1.42-1.41L13 6.17V2h-2v4.17L7.76 2.93 6.34 4.34 11 9v2H9L4.34 6.34 2.93 7.76 6.17 11H2v2h4.17l-3.24 3.24 1.41 1.42L9 13h2v2l-4.66 4.66 1.42 1.41L11 17.83V22h2v-4.17l3.24 3.24 1.42-1.41L13 15v-2h2l4.66 4.66 1.41-1.42L17.83 13H22z"/></svg>
+                    </div>
+                    <span>AC</span>
+                </div>
+                <div class="facility-tile" data-facility="power">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                    </div>
+                    <span>Power Backup</span>
+                </div>
+                <div class="facility-tile" data-facility="laundry">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2.01L6 2c-1.11 0-2 .89-2 2v16c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V4c0-1.11-.89-1.99-2-1.99zM18 20H6L6 4h12v16zm-6-7.5c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5zM8 6h3v2H8V6zm5 0h3v2h-3V6z"/></svg>
+                    </div>
+                    <span>Laundry</span>
+                </div>
+                <div class="facility-tile" data-facility="gym">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg>
+                    </div>
+                    <span>Gym</span>
+                </div>
+                <div class="facility-tile selected" data-facility="pool">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M22 21c-1.11 0-1.73-.37-2.18-.64-.37-.22-.6-.36-1.15-.36-.56 0-.78.13-1.15.36-.46.27-1.07.64-2.18.64s-1.73-.37-2.18-.64c-.37-.22-.6-.36-1.15-.36-.56 0-.78.13-1.15.36-.46.27-1.08.64-2.19.64-1.11 0-1.73-.37-2.18-.64-.37-.23-.6-.36-1.15-.36s-.78.13-1.15.36c-.46.27-1.08.64-2.19.64v-2c.56 0 .78-.13 1.15-.36.46-.27 1.08-.64 2.19-.64s1.73.37 2.18.64c.37.23.59.36 1.15.36.56 0 .78-.13 1.15-.36.46-.27 1.08-.64 2.19-.64 1.11 0 1.73.37 2.18.64.37.22.6.36 1.15.36s.78-.13 1.15-.36c.45-.27 1.07-.64 2.18-.64s1.73.37 2.18.64c.37.23.59.36 1.15.36v2zm0-4.5c-1.11 0-1.73-.37-2.18-.64-.37-.22-.6-.36-1.15-.36-.56 0-.78.13-1.15.36-.45.27-1.07.64-2.18.64s-1.73-.37-2.18-.64c-.37-.22-.6-.36-1.15-.36-.56 0-.78.13-1.15.36-.45.27-1.07.64-2.18.64s-1.73-.37-2.18-.64c-.37-.22-.6-.36-1.15-.36s-.78.13-1.15.36c-.47.27-1.09.64-2.2.64v-2c.56 0 .78-.13 1.15-.36.45-.27 1.07-.64 2.18-.64s1.73.37 2.18.64c.37.22.6.36 1.15.36.56 0 .78-.13 1.15-.36.45-.27 1.07-.64 2.18-.64s1.73.37 2.18.64c.37.22.6.36 1.15.36s.78-.13 1.15-.36c.45-.27 1.07-.64 2.18-.64s1.73.37 2.18.64c.37.22.6.36 1.15.36v2zM8.67 12c.56 0 .78-.13 1.15-.36.46-.27 1.08-.64 2.19-.64 1.11 0 1.73.37 2.18.64.37.22.6.36 1.15.36s.78-.13 1.15-.36c.12-.07.26-.15.41-.23L10.48 5C8.93 3.45 7.5 2.99 5 3v2.5c1.82-.01 2.89.39 4 1.5l1 1-3.25 3.25c.31.12.56.27.77.39.37.23.59.36 1.15.36z"/><circle cx="16.5" cy="5.5" r="2.5"/></svg>
+                    </div>
+                    <span>Swimming Pool</span>
+                </div>
+                <div class="facility-tile" data-facility="parking">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                    </div>
+                    <span>Parking</span>
+                </div>
+                <div class="facility-tile" data-facility="security">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                    </div>
+                    <span>Security</span>
+                </div>
+                <div class="facility-tile" data-facility="housekeeping">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </div>
+                    <span>Housekeeping</span>
+                </div>
+                <div class="facility-tile" data-facility="rooftop">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>
+                    </div>
+                    <span>Rooftop</span>
+                </div>
+                <div class="facility-tile" data-facility="play">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/></svg>
+                    </div>
+                    <span>Play Area</span>
+                </div>
+                <div class="facility-tile" data-facility="study">
+                    <div class="facility-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+                    </div>
+                    <span>Study Area</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-nav">
+            <div class="step-indicator">
+                <span class="step-num">04</span> / <span class="step-total">06</span>
+            </div>
+            <button class="next-btn" id="btn-to-room" aria-label="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== STEP 5: ROOM SHARING ==================== -->
+    <section class="step step-room" data-step="4" id="step-room">
+        <div class="step-bg step-bg-warm"></div>
+
+        <div class="step-header">
+            <div class="progress-bar">
+                <div class="progress-dots">
+                    <div class="progress-dot completed" data-target="1"><span class="dot-num">01</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="2"><span class="dot-num">02</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="3"><span class="dot-num">03</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot active" data-target="4">
+                        <span class="dot-num">04</span>
+                        <span class="dot-label">Room</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content room-content">
+            <h2 class="section-title">Choose your<br>room sharing preference</h2>
+            <p class="section-subtitle">Pick what suits you best.</p>
+
+            <div class="room-options" id="room-options">
+                <div class="room-option selected" data-room="three" data-price="6500">
+                    <div class="room-img">
+                        <img src="images/room_three.png" alt="Three Sharing Room" />
+                    </div>
+                    <h4>Three Sharing</h4>
+                    <div class="room-price">₹6,500 <span>/month</span></div>
+                </div>
+                <div class="room-option" data-room="two" data-price="7500">
+                    <div class="room-img">
+                        <img src="images/room_two.png" alt="Two Sharing Room" />
+                    </div>
+                    <h4>Two Sharing</h4>
+                    <div class="room-price">₹7,500 <span>/month</span></div>
+                </div>
+                <div class="room-option" data-room="single" data-price="11000">
+                    <div class="room-img">
+                        <img src="images/room_three.png" alt="Single Room" />
+                    </div>
+                    <h4>Single Room</h4>
+                    <div class="room-price">₹11,000 <span>/month</span></div>
+                </div>
+            </div>
+
+            <div class="room-detail-card" id="room-detail-card">
+                <div class="room-detail-header">
+                    <span class="room-detail-badge">Spacious</span>
+                    <h4>Three Sharing Room</h4>
+                </div>
+                <ul class="room-detail-list">
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        3 Beds
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        3 Wardrobes
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Study Table
+                    </li>
+                    <li>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Attached Balcony
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step-nav">
+            <div class="step-indicator">
+                <span class="step-num">05</span> / <span class="step-total">06</span>
+            </div>
+            <button class="next-btn" id="btn-to-matches" aria-label="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== STEP 6: BEST MATCHES ==================== -->
+    <section class="step step-matches" data-step="5" id="step-matches">
+        <div class="step-bg step-bg-white"></div>
+
+        <div class="step-header">
+            <div class="progress-bar">
+                <div class="progress-dots">
+                    <div class="progress-dot completed" data-target="1"><span class="dot-num">01</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="2"><span class="dot-num">02</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="3"><span class="dot-num">03</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="4"><span class="dot-num">04</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content matches-content">
+            <h2 class="section-title">Here are the best matches<br>for you!</h2>
+            <p class="section-subtitle">Top stays near <span class="text-purple" id="matches-company">TCS Hinjewadi</span> based on your preferences.</p>
+
+            <div class="match-cards" id="match-cards">
+                <div class="match-card">
+                    <div class="match-card-img">
+                        <img src="images/stay.png" alt="Green Valley Stays" />
+                        <span class="verified-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            Verified
+                        </span>
+                    </div>
+                    <div class="match-card-info">
+                        <div class="match-card-top">
+                            <h4>Green Valley Stays</h4>
+                            <span class="match-distance">2 min from TCS</span>
+                        </div>
+                        <div class="match-rating">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <span>4.5</span>
+                            <span class="rating-count">(128)</span>
+                        </div>
+                        <div class="match-amenities">
+                            <span class="amenity-pill">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                                Wi-Fi
+                            </span>
+                            <span class="amenity-pill">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 11h-4.17l3.24-3.24-1.41-1.42L15 11h-2V9l4.66-4.66-1.42-1.41L13 6.17V2h-2v4.17L7.76 2.93 6.34 4.34 11 9v2H9L4.34 6.34 2.93 7.76 6.17 11H2v2h4.17l-3.24 3.24 1.41 1.42L9 13h2v2l-4.66 4.66 1.42 1.41L11 17.83V22h2v-4.17l3.24 3.24 1.42-1.41L13 15v-2h2l4.66 4.66 1.41-1.42L17.83 13H22z"/></svg>
+                                AC
+                            </span>
+                            <span class="amenity-pill">Swimming Pool</span>
+                            <span class="amenity-pill">3 Sharing</span>
+                        </div>
+                        <div class="match-bottom">
+                            <div class="match-price">
+                                <span class="price-amount">₹6,500</span>
+                                <span class="price-period">/month</span>
+                            </div>
+                            <button class="view-details-btn" id="view-details-btn">View Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="match-card">
+                    <div class="match-card-img">
+                        <img src="images/stay.png" alt="Sunrise PG" />
+                        <span class="verified-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            Verified
+                        </span>
+                    </div>
+                    <div class="match-card-info">
+                        <div class="match-card-top">
+                            <h4>Sunrise PG</h4>
+                            <span class="match-distance">5 min from TCS</span>
+                        </div>
+                        <div class="match-rating">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <span>4.2</span>
+                            <span class="rating-count">(85)</span>
+                        </div>
+                        <div class="match-amenities">
+                            <span class="amenity-pill">Wi-Fi</span>
+                            <span class="amenity-pill">Gym</span>
+                            <span class="amenity-pill">Laundry</span>
+                            <span class="amenity-pill">2 Sharing</span>
+                        </div>
+                        <div class="match-bottom">
+                            <div class="match-price">
+                                <span class="price-amount">₹7,500</span>
+                                <span class="price-period">/month</span>
+                            </div>
+                            <button class="view-details-btn">View Details</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="explore-more-btn" id="explore-more-btn">Explore More Options</button>
+        </div>
+
+        <div class="step-nav">
+            <div class="step-indicator">
+                <span class="step-num">06</span> / <span class="step-total">06</span>
+            </div>
+            <button class="next-btn" id="btn-to-summary" aria-label="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== STEP 7: SUMMARY ==================== -->
+    <section class="step step-summary" data-step="6" id="step-summary">
+        <div class="step-bg step-bg-summary"></div>
+
+        <div class="summary-content">
+            <div class="summary-left">
+                <div class="summary-header">
+                    <div class="summary-check">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <h2 class="summary-title">You're all set!</h2>
+                    <p class="summary-subtitle">We'll help you move closer to what<br>matters. Let's get you home.</p>
+                </div>
+
+                <div class="summary-items">
+                    <div class="summary-item">
+                        <div class="summary-item-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        </div>
+                        <div class="summary-item-text">
+                            <span class="summary-item-label">Company</span>
+                            <span class="summary-item-value" id="summary-company">TCS Hinjewadi Pune</span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7z"/></svg>
+                        </div>
+                        <div class="summary-item-text">
+                            <span class="summary-item-label">Food</span>
+                            <span class="summary-item-value" id="summary-food">Sai Krishna Mess</span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                        </div>
+                        <div class="summary-item-text">
+                            <span class="summary-item-label">Facilities</span>
+                            <span class="summary-item-value" id="summary-facilities">Wi-Fi, Pool, Play Area</span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-item-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        </div>
+                        <div class="summary-item-text">
+                            <span class="summary-item-label">Room</span>
+                            <span class="summary-item-value" id="summary-room">Three Sharing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="cta-final" id="cta-final">
+                    Find My Perfect Stay 🚀
+                </button>
+            </div>
+
+            <div class="summary-right">
+                <div class="summary-map-card">
+                    <div class="map-header">
+                        <div class="nav-logo">
+                            <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                                <circle cx="20" cy="20" r="18" stroke="#7C3AED" stroke-width="3" fill="none"/>
+                                <circle cx="20" cy="14" r="5" fill="#7C3AED"/>
+                                <path d="M10 30c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="#7C3AED" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            </svg>
+                            <span>NearDesk</span>
+                        </div>
+                        <div class="map-icons">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                    </div>
+                    <div class="map-visual">
+                        <div class="map-grid">
+                            <div class="map-road map-road-h"></div>
+                            <div class="map-road map-road-v"></div>
+                            <div class="map-road map-road-h2"></div>
+                            <div class="map-road map-road-v2"></div>
+                        </div>
+                        <div class="map-pin map-pin-office">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#7C3AED"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <div class="map-pin-label">
+                                <strong>TCS Hinjewadi</strong>
+                                <span>2 min away</span>
+                            </div>
+                        </div>
+                        <div class="map-route-line"></div>
+                    </div>
+                </div>
+
+                <div class="summary-cost-card">
+                    <div class="cost-header">
+                        <h4>Your Summary</h4>
+                        <button class="edit-link">Edit</button>
+                    </div>
+                    <div class="cost-items">
+                        <div class="cost-item">
+                            <div>
+                                <span class="cost-label">Company</span>
+                                <span class="cost-value" id="cost-company">TCS Hinjewadi Pune</span>
+                            </div>
+                        </div>
+                        <div class="cost-item">
+                            <div>
+                                <span class="cost-label">Food</span>
+                                <span class="cost-value" id="cost-food">Sai Krishna Mess</span>
+                            </div>
+                            <span class="cost-amount" id="cost-food-amount">₹3,200/month</span>
+                        </div>
+                        <div class="cost-item">
+                            <div>
+                                <span class="cost-label">Facilities</span>
+                                <span class="cost-value" id="cost-facilities">Wi-Fi, Swimming Pool, Play Area</span>
+                            </div>
+                        </div>
+                        <div class="cost-item">
+                            <div>
+                                <span class="cost-label">Room</span>
+                                <span class="cost-value" id="cost-room">Three Sharing</span>
+                            </div>
+                            <span class="cost-amount" id="cost-room-amount">₹6,500/month</span>
+                        </div>
+                    </div>
+                    <div class="cost-total">
+                        <div>
+                            <span class="cost-total-label">Estimated Monthly Cost</span>
+                        </div>
+                        <span class="cost-total-amount" id="cost-total">₹9,700/month</span>
+                    </div>
+                    <button class="cta-see-stays" id="cta-see-stays">See Best Stays</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
