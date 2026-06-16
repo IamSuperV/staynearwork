@@ -4,8 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         currentStep: 0,
         company: 'TCS Hinjewadi Pune',
-        food: 'Sai Krishna Mess',
+        food: 'Mezza9',
         foodPrice: 3200,
+        lat: 18.586,
+        lon: 73.742,
         facilities: ['Wi-Fi', 'Swimming Pool'],
         roomType: 'Three Sharing',
         roomPrice: 6500
@@ -114,15 +116,120 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
+    // Global back button handler — one listener for all .back-btn
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.back-btn');
+        if (!btn) return;
+        const target = parseInt(btn.getAttribute('data-back'));
+        if (!isNaN(target)) goToStep(target);
+    });
+
     function initStep(index) {
         if (index === 1) {
             const el = document.getElementById('company-name-display');
             if(el) el.textContent = state.company;
-        } else if (index === 5) {
-            const el = document.getElementById('matches-company');
-            if(el) el.textContent = state.company.split(' ')[0];
+
+            // Update company name label in stat
+            const statName = document.getElementById('stat-company-name');
+            if(statName) statName.textContent = state.company.split(',')[0];
+
+            // Fetch REAL search count from backend, animate 0 → real number
+            const statCount = document.getElementById('stat-count');
+            const statPeople = document.getElementById('stat-people');
+
+            // Reset to 0 while loading
+            if(statCount) statCount.textContent = '+0';
+            if(statPeople) statPeople.textContent = '0 people';
+
+            fetch(`http://localhost:3001/api/search-count?company=${encodeURIComponent(state.company)}`)
+                .then(r => r.json())
+                .then(({ count }) => {
+                    const target = count; // real number from DB
+                    let current = 0;
+
+                    if (target === 0) {
+                        // First time this company is searched — show 0, live tick
+                        if(statCount) statCount.textContent = '+1';
+                        if(statPeople) statPeople.textContent = '1 person';
+                        return;
+                    }
+
+                    // Animate from 0 to real count
+                    const stepSize = Math.max(1, Math.ceil(target / 40));
+                    const fastInterval = setInterval(() => {
+                        current = Math.min(current + stepSize, target);
+                        if(statCount) statCount.textContent = '+' + current.toLocaleString();
+                        if(statPeople) statPeople.textContent = current.toLocaleString() + ' people';
+                        if(current >= target) {
+                            clearInterval(fastInterval);
+                            // Tick up 1 every few seconds to feel live (already includes current user)
+                            setInterval(() => {
+                                current += 1;
+                                if(statCount) statCount.textContent = '+' + current.toLocaleString();
+                                if(statPeople) statPeople.textContent = current.toLocaleString() + ' people';
+                            }, 8000);
+                        }
+                    }, 40);
+                })
+                .catch(() => {
+                    // Backend unreachable — show a neutral placeholder
+                    if(statCount) statCount.textContent = '+1';
+                    if(statPeople) statPeople.textContent = '1 person';
+                });
+        } else if (index === 2) {
+            // Food step — always fetch fresh live data for the selected company
+            const foodContainer = document.getElementById('food-cards');
+            if (foodContainer) {
+                foodContainer.innerHTML = `
+                    <div style="padding:40px;text-align:center;color:#7C3AED;">
+                        <div style="font-size:2.5rem;margin-bottom:12px;animation:pulse 1.5s infinite;">🍽️</div>
+                        <p style="font-weight:600;font-size:1rem;">Finding restaurants near ${state.company.split(',')[0]}...</p>
+                        <p style="font-size:0.8rem;color:#9ca3af;margin-top:4px;">Checking live data from OpenStreetMap</p>
+                    </div>`;
+            }
+            fetchNearbyData(state.lat, state.lon);
+        } else if (index === 4) {
+            if (window.leafletMap) {
+                setTimeout(async () => {
+                    window.leafletMap.invalidateSize();
+                    window.leafletMap.setView([state.lat, state.lon], 14);
+                    if (window.updateMapOffice) window.updateMapOffice();
+                    // Only re-fetch if we don't have live data yet for this location
+                    if (markersLayer) renderMapMarkers('all');
+                }, 300);
+            }
         } else if (index === 6) {
+            const el = document.getElementById('matches-company');
+            if(el) el.textContent = state.company.split(',')[0];
+            renderMatchCards();
+        } else if (index === 7) {
             updateSummary();
+        }
+    }
+
+    async function fetchNearbyData(lat, lon) {
+        try {
+            const nRes = await fetch(`http://localhost:3001/api/nearby?lat=${lat}&lon=${lon}`);
+            const data = await nRes.json();
+            if (!Array.isArray(data) || data.length === 0) {
+                console.warn('No nearby data returned for', lat, lon);
+            }
+            // Normalize .lng field
+            mockProperties = data.map(p => ({ ...p, lng: p.lng !== undefined ? p.lng : p.lon }));
+            renderFoodCards();
+            if (markersLayer) renderMapMarkers('all');
+            if (window.updateMapOffice) window.updateMapOffice();
+        } catch(e) {
+            console.error('Failed to fetch nearby:', e);
+            // Show error in food container
+            const foodContainer = document.getElementById('food-cards');
+            if (foodContainer && foodContainer.querySelector('[style*="finding"]')) {
+                foodContainer.innerHTML = `
+                    <div style="padding:32px;text-align:center;color:#ef4444;">
+                        <div style="font-size:2rem;margin-bottom:8px;">⚠️</div>
+                        <p>Could not load live data.<br><small>Make sure backend is running on port 3001</small></p>
+                    </div>`;
+            }
         }
     }
 
@@ -130,11 +237,76 @@ document.addEventListener('DOMContentLoaded', () => {
     const companyInput = document.getElementById('company-input');
     const searchSuggestions = document.getElementById('search-suggestions');
     const searchBtn = document.getElementById('search-btn');
+    let searchTimeout;
 
-    if(companyInput && searchSuggestions) {
+    if (companyInput && searchSuggestions) {
         companyInput.addEventListener('input', (e) => {
-            if (e.target.value.length > 0) {
+            const query = e.target.value.trim();
+            if (query.length > 2) {
+                clearTimeout(searchTimeout);
+                searchSuggestions.innerHTML = '<div class="suggestion">Searching...</div>';
                 searchSuggestions.style.display = 'flex';
+                
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`http://localhost:3001/api/search-companies?q=${encodeURIComponent(query)}`);
+                        const data = await res.json();
+                        searchSuggestions.innerHTML = '';
+                        if (data.length === 0) {
+                            searchSuggestions.innerHTML = '<div class="suggestion">No results found</div>';
+                        } else {
+                            data.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'suggestion';
+                                // Parse name + location from display_name
+                                const parts = item.display_name.split(',').map(s => s.trim());
+                                const name = parts[0];
+                                const location = parts.slice(1, 3).join(', ');
+                                const label = parts.slice(0, 3).join(', ');
+                                const itemLat = parseFloat(item.lat);
+                                const itemLon = parseFloat(item.lon);
+                                // Pick icon based on type
+                                const typeIcons = { 'office': '🏢', 'restaurant': '🍽️', 'shop': '🛒', 'hospital': '🏥', 'school': '🎓', 'hotel': '🏨', 'bank': '🏦', 'fuel': '⛽', 'supermarket': '🛒' };
+                                const icon = typeIcons[item.type] || '🏢';
+                                div.innerHTML = `
+                                    <div style="display:flex;align-items:center;gap:10px;width:100%;">
+                                        <span style="font-size:1.1rem;">${icon}</span>
+                                        <div style="flex:1;min-width:0;">
+                                            <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                                            <div style="font-size:0.75rem;opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${location || 'India'}</div>
+                                        </div>
+                                    </div>`;
+                                
+                                // Pre-fetch on hover — data ready before user even clicks
+                                div.addEventListener('mouseenter', () => {
+                                    fetchNearbyData(itemLat, itemLon);
+                                }, { once: true });
+
+                                div.addEventListener('click', () => {
+                                    companyInput.value = label;
+                                    state.company = label;
+                                    state.lat = itemLat;
+                                    state.lon = itemLon;
+                                    searchSuggestions.style.display = 'none';
+
+                                    // Track this real search — fire and forget
+                                    fetch('http://localhost:3001/api/track-search', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ company: label })
+                                    }).catch(() => {}); // silent fail if offline
+
+                                    // Fire nearby fetch in background — don't block navigation
+                                    fetchNearbyData(state.lat, state.lon);
+                                    goToStep(1);
+                                });
+                                searchSuggestions.appendChild(div);
+                            });
+                        }
+                    } catch(e) {
+                        searchSuggestions.innerHTML = '<div class="suggestion">Error fetching results</div>';
+                    }
+                }, 500);
             } else {
                 searchSuggestions.style.display = 'none';
             }
@@ -147,15 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    document.querySelectorAll('.suggestion').forEach(item => {
-        item.addEventListener('click', () => {
-            const company = item.getAttribute('data-company');
-            if(companyInput) companyInput.value = company;
-            state.company = company;
-            goToStep(1);
-        });
-    });
 
     if(searchBtn && companyInput) {
         searchBtn.addEventListener('click', () => {
@@ -171,26 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(btnToFood) btnToFood.addEventListener('click', () => goToStep(2));
 
     // 6. STEP 2: FOOD
-    const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
-    const foodListView = document.getElementById('food-list-view');
-    const foodMapView = document.getElementById('food-map-view');
-
-    viewToggleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            viewToggleBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const view = btn.getAttribute('data-view');
-            if(view === 'list') {
-                if(foodMapView) foodMapView.style.display = 'none';
-                if(foodListView) foodListView.style.display = 'block';
-            } else {
-                if(foodListView) foodListView.style.display = 'none';
-                if(foodMapView) foodMapView.style.display = 'block';
-            }
-        });
-    });
-
     const foodTabs = document.querySelectorAll('.food-tab');
     const foodCards = document.querySelectorAll('.food-card');
 
@@ -229,8 +372,152 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function renderFoodCards() {
+        const foodContainer = document.getElementById('food-cards');
+        if (!foodContainer) return;
+        
+        foodContainer.innerHTML = '';
+        // Show up to 6 real food items
+        const foodItems = mockProperties.filter(p => p.type === 'food').slice(0, 6);
+        
+        if (foodItems.length === 0) {
+            foodContainer.innerHTML = `
+                <div style="padding:32px;text-align:center;color:#6b7280;">
+                    <div style="font-size:2rem;margin-bottom:8px;">🍽️</div>
+                    <p>No food places found nearby.<br>Try a different location.</p>
+                </div>`;
+            return;
+        }
+
+        foodItems.forEach((item, index) => {
+            const isFirst = index === 0;
+            if (isFirst) {
+                state.food = item.name;
+                state.foodPrice = 2500;
+            }
+
+            // Estimate distance from company in metres
+            const dLat = (item.lat - state.lat) * 111000;
+            const dLng = (item.lng - state.lon) * 111000 * Math.cos(state.lat * Math.PI / 180);
+            const distM = Math.round(Math.sqrt(dLat * dLat + dLng * dLng));
+            const distLabel = distM < 1000 ? `${distM}m away` : `${(distM / 1000).toFixed(1)}km away`;
+            const walkMin = Math.round(distM / 80); // ~80m per min walk
+
+            // Badge label based on icon
+            let badgeClass = 'nonveg';
+            let badgeLabel = 'Non-Veg';
+            if (item.icon === '☕') { badgeClass = 'veg'; badgeLabel = 'Cafe'; }
+            else if (item.icon === '🍔') { badgeClass = 'nonveg'; badgeLabel = 'Fast Food'; }
+            else if (item.verified) { badgeClass = 'veg'; badgeLabel = 'Verified'; }
+            
+            const card = document.createElement('div');
+            card.className = `food-card${isFirst ? ' selected' : ''}`;
+            card.setAttribute('data-type', 'restaurants');
+            
+            card.innerHTML = `
+                <div class="food-card-img">
+                    <img src="images/food.png" alt="${item.name}" />
+                    <span class="food-badge ${badgeClass}">${badgeLabel}</span>
+                </div>
+                <div class="food-card-info">
+                    <h4>${item.icon || '🍽️'} ${item.name}</h4>
+                    <div class="food-rating">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span>${(3.5 + Math.random() * 1.4).toFixed(1)}</span>
+                        <span class="rating-count">(${Math.floor(50 + Math.random() * 450)})</span>
+                    </div>
+                    <div class="food-meta">
+                        <span class="food-meals">Restaurant</span>
+                        <span class="food-distance">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            ${distLabel} · ${walkMin} min walk
+                        </span>
+                    </div>
+                    <div class="food-price">
+                        <span class="price-amount">₹2,500</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                </div>
+            `;
+            
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.food-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                state.food = item.name;
+                state.foodPrice = 2500;
+            });
+            
+            foodContainer.appendChild(card);
+        });
+    }
+
     const btnToFacilities = document.getElementById('btn-to-facilities');
     if(btnToFacilities) btnToFacilities.addEventListener('click', () => goToStep(3));
+
+    function renderMatchCards() {
+        const container = document.getElementById('match-cards');
+        if (!container) return;
+
+        const pgItems = mockProperties.filter(p => p.type === 'pg').slice(0, 5);
+
+        if (pgItems.length === 0) {
+            container.innerHTML = `
+                <div style="padding:32px;text-align:center;color:#6b7280;">
+                    <div style="font-size:2rem;margin-bottom:8px;">🏠</div>
+                    <p>No PGs found nearby.<br>Try a different company location.</p>
+                </div>`;
+            return;
+        }
+
+        const amenityPool = ['Wi-Fi', 'AC', 'Laundry', 'Power Backup', 'CCTV', 'Hot Water', 'Meals', 'Parking'];
+        const companyShort = state.company.split(',')[0];
+
+        container.innerHTML = '';
+        pgItems.forEach((pg, i) => {
+            const dLat = (pg.lat - state.lat) * 111000;
+            const dLng = (pg.lng - state.lon) * 111000 * Math.cos(state.lat * Math.PI / 180);
+            const distM = Math.round(Math.sqrt(dLat * dLat + dLng * dLng));
+            const distLabel = distM < 1000 ? `${distM}m from ${companyShort}` : `${(distM/1000).toFixed(1)}km from ${companyShort}`;
+            const walkMin = Math.round(distM / 80);
+            const rating = (3.8 + Math.random() * 1.1).toFixed(1);
+            const reviews = Math.floor(40 + Math.random() * 300);
+            const price = state.roomPrice || 6500;
+            // Pick 3 random amenities + selected facilities
+            const shuffled = [...amenityPool].sort(() => Math.random() - 0.5);
+            const amenities = [...new Set([...state.facilities.slice(0,2), ...shuffled])].slice(0, 4);
+
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `
+                <div class="match-card-img">
+                    <img src="images/stay.png" alt="${pg.name}" />
+                    ${pg.verified ? `<span class="verified-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Verified</span>` : ''}
+                </div>
+                <div class="match-card-info">
+                    <div class="match-card-top">
+                        <h4>${pg.name}</h4>
+                        <span class="match-distance">${distLabel} · ${walkMin} min walk</span>
+                    </div>
+                    <div class="match-rating">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span>${rating}</span>
+                        <span class="rating-count">(${reviews})</span>
+                    </div>
+                    <div class="match-amenities">
+                        ${amenities.map(a => `<span class="amenity-pill">${a}</span>`).join('')}
+                        <span class="amenity-pill">${state.roomType || '3 Sharing'}</span>
+                    </div>
+                    <div class="match-bottom">
+                        <div class="match-price">
+                            <span class="price-amount">₹${price.toLocaleString()}</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <button class="view-details-btn" onclick="document.querySelector('.step[data-step=\"7\"]').classList.add('active');document.querySelector('.step[data-step=\"6\"]').classList.remove('active');">View Details</button>
+                    </div>
+                </div>`;
+            container.appendChild(card);
+        });
+    }
 
     // 7. STEP 3: FACILITIES
     const facilityTiles = document.querySelectorAll('.facility-tile');
@@ -256,10 +543,176 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const btnToRoom = document.getElementById('btn-to-room');
-    if(btnToRoom) btnToRoom.addEventListener('click', () => goToStep(4));
+    const btnToMap = document.getElementById('btn-to-map');
+    if(btnToMap) btnToMap.addEventListener('click', () => goToStep(4));
 
-    // 8. STEP 4: ROOM
+    // STEP 4: REAL LEAFLET MAP
+    let mockProperties = [
+        { id: 1, type: 'pg', name: 'Zolo Stanza', lat: 18.591, lng: 73.738, price: '₹7,500', icon: '🏠', color: 'marker-bg-green', verified: true },
+        { id: 2, type: 'pg', name: 'Tulip PG', lat: 18.595, lng: 73.742, price: '₹6,000', icon: '🏠', color: 'marker-bg-green' },
+        { id: 3, type: 'pg', name: 'YourSpace Hostel', lat: 18.588, lng: 73.748, price: '₹8,500', icon: '🛏️', color: 'marker-bg-green', verified: true },
+        { id: 4, type: 'pg', name: 'Sunrise PG', lat: 18.582, lng: 73.735, price: '₹5,500', icon: '🏢', color: 'marker-bg-green' },
+        { id: 5, type: 'pg', name: 'Shree PG', lat: 18.585, lng: 73.745, price: '₹6,800', icon: '🏠', color: 'marker-bg-green', verified: true },
+        
+        { id: 6, type: 'gym', name: "Gold's Gym", lat: 18.580, lng: 73.755, price: '₹15k/yr', icon: '💪', color: 'marker-bg-blue', verified: true },
+        { id: 7, type: 'gym', name: 'Abs Fitness', lat: 18.578, lng: 73.739, price: '₹12k/yr', icon: '🏋️', color: 'marker-bg-blue' },
+        { id: 8, type: 'gym', name: 'FitPro Gym', lat: 18.575, lng: 73.748, price: '₹10k/yr', icon: '🏃', color: 'marker-bg-blue', verified: true },
+        { id: 9, type: 'gym', name: 'Silver Sports Club', lat: 18.573, lng: 73.742, price: 'Pool', icon: '🏊', color: 'marker-bg-blue' },
+        
+        { id: 10, type: 'food', name: 'Mezza9', lat: 18.592, lng: 73.744, price: '4.5★', icon: '🍽️', color: 'marker-bg-orange', verified: true },
+        { id: 11, type: 'food', name: 'Ignite - Courtyard', lat: 18.586, lng: 73.736, price: '4.8★', icon: '🥂', color: 'marker-bg-orange', verified: true },
+        { id: 12, type: 'food', name: 'Behrouz Biryani', lat: 18.585, lng: 73.758, price: '4.2★', icon: '🍲', color: 'marker-bg-orange' },
+        { id: 13, type: 'food', name: "Domino's Pizza", lat: 18.590, lng: 73.750, price: '4.0★', icon: '🍕', color: 'marker-bg-orange' },
+        { id: 14, type: 'food', name: 'Kasturi Restaurant', lat: 18.580, lng: 73.740, price: '4.1★', icon: '🍛', color: 'marker-bg-orange' },
+        { id: 15, type: 'food', name: 'Thikana', lat: 18.595, lng: 73.735, price: '4.6★', icon: '🍻', color: 'marker-bg-orange', verified: true }
+    ];
+
+    let map;
+    let markersLayer;
+    
+    // Initialize map
+    const mapEl = document.getElementById('leaflet-map');
+    if (mapEl && typeof L !== 'undefined') {
+        const centerLat = state.lat;
+        const centerLng = state.lon;
+        
+        map = L.map('leaflet-map', {
+            zoomControl: false 
+        }).setView([centerLat, centerLng], 14);
+        
+        window.leafletMap = map;
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors',
+            className: 'map-tiles'
+        }).addTo(map);
+        
+        L.control.zoom({ position: 'topright' }).addTo(map);
+        window.officeMarkerLayer = L.layerGroup().addTo(map);
+        
+        window.updateMapOffice = function() {
+            window.officeMarkerLayer.clearLayers();
+            L.circle([state.lat, state.lon], {
+                color: '#8b5cf6',
+                fillColor: '#f3e8ff',
+                fillOpacity: 0.2,
+                radius: 1500,
+                dashArray: '5, 10',
+                weight: 2
+            }).addTo(window.officeMarkerLayer);
+            
+            const officeIcon = L.divIcon({
+                className: 'custom-map-marker',
+                html: `<div class="office-marker"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="2"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4M9 7h6M9 11h6M9 15h6"/></svg>${state.company.split(',')[0]}</div>`,
+                iconSize: [140, 40],
+                iconAnchor: [70, 20]
+            });
+            L.marker([state.lat, state.lon], { icon: officeIcon, zIndexOffset: 1000 }).addTo(window.officeMarkerLayer);
+            
+            if (markersLayer) renderMapMarkers('all');
+        };
+        
+        markersLayer = L.layerGroup().addTo(map);
+        window.updateMapOffice();
+    }
+
+    function renderMapMarkers(filterType, isVerified = false) {
+        if(!markersLayer) return;
+        markersLayer.clearLayers();
+        
+        mockProperties.forEach(prop => {
+            if (filterType !== 'all' && prop.type !== filterType && prop.type !== 'circle') {
+                return;
+            }
+            if (prop.type !== 'circle') {
+                if (isVerified && !prop.verified) return;
+            }
+            
+            let iconHtml = '';
+            if (prop.type === 'circle') {
+                iconHtml = `<div class="map-circle-marker">${prop.label}</div>`;
+            } else {
+                iconHtml = `
+                    <div class="marker-bubble">
+                        <div class="marker-icon-circle ${prop.color}">${prop.icon}</div>
+                        ${prop.price}
+                    </div>
+                `;
+            }
+            
+            const customIcon = L.divIcon({
+                className: 'custom-map-marker',
+                html: iconHtml,
+                iconSize: [100, 40],
+                iconAnchor: prop.type === 'circle' ? [16, 16] : [50, 40]
+            });
+            
+            const marker = L.marker([prop.lat, prop.lng], { icon: customIcon }).addTo(markersLayer);
+            
+            marker.on('click', () => {
+                const el = marker.getElement();
+                if(el) {
+                    el.style.transform = el.style.transform + ' scale(1.15)';
+                    el.style.zIndex = 1000;
+                    setTimeout(() => goToStep(5), 400); // Go to room selection
+                }
+            });
+        });
+    }
+
+    // Filter Logic
+    const realMapPills = document.querySelectorAll('.real-map-pill');
+    realMapPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            if(pill.classList.contains('icon-pill')) {
+                pill.classList.toggle('active');
+            } else {
+                realMapPills.forEach(p => {
+                    if(!p.classList.contains('icon-pill')) p.classList.remove('active')
+                });
+                pill.classList.add('active');
+            }
+            
+            const activeMain = Array.from(realMapPills).find(p => p.classList.contains('active') && !p.classList.contains('icon-pill'));
+            const filterType = activeMain ? activeMain.getAttribute('data-filter') : 'all';
+            
+            const verifiedPill = document.querySelector('.verified-pill');
+            const isVerified = verifiedPill ? verifiedPill.classList.contains('active') : false;
+            
+            renderMapMarkers(filterType, isVerified);
+        });
+    });
+    
+    const toggleSwitch = document.querySelector('.toggle-switch');
+    if (toggleSwitch) {
+        toggleSwitch.addEventListener('click', () => {
+            toggleSwitch.classList.toggle('active');
+        });
+    }
+    
+    const searchAreaBtn = document.querySelector('.real-map-search-area');
+    if (searchAreaBtn) {
+        searchAreaBtn.addEventListener('click', () => {
+            const originalHtml = searchAreaBtn.innerHTML;
+            searchAreaBtn.innerHTML = 'Searching...';
+            searchAreaBtn.style.opacity = '0.7';
+            setTimeout(() => {
+                searchAreaBtn.innerHTML = originalHtml;
+                searchAreaBtn.style.opacity = '1';
+                
+                // Slightly move map to simulate refresh
+                if(window.leafletMap) {
+                    window.leafletMap.panBy([0, 10]);
+                    setTimeout(() => window.leafletMap.panBy([0, -10]), 300);
+                }
+            }, 800);
+        });
+    }
+
+    const btnToRoom = document.getElementById('btn-to-room');
+    if(btnToRoom) btnToRoom.addEventListener('click', () => goToStep(5));
+
+    // 8. STEP 5: ROOM
     const roomOptions = document.querySelectorAll('.room-option');
     const roomDetailCard = document.getElementById('room-detail-card');
     
@@ -308,15 +761,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const btnToMatches = document.getElementById('btn-to-matches');
-    if(btnToMatches) btnToMatches.addEventListener('click', () => goToStep(5));
+    if(btnToMatches) btnToMatches.addEventListener('click', () => goToStep(6));
 
-    // 9. STEP 5: MATCHES
+    // 9. STEP 6: MATCHES
     document.querySelectorAll('.view-details-btn').forEach(btn => {
-        btn.addEventListener('click', () => goToStep(6));
+        btn.addEventListener('click', () => goToStep(7));
     });
     
     const btnToSummary = document.getElementById('btn-to-summary');
-    if(btnToSummary) btnToSummary.addEventListener('click', () => goToStep(6));
+    if(btnToSummary) btnToSummary.addEventListener('click', () => goToStep(7));
     
     const exploreMoreBtn = document.getElementById('explore-more-btn');
     if(exploreMoreBtn) exploreMoreBtn.addEventListener('click', () => {

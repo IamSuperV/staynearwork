@@ -8,7 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <!-- Loader -->
@@ -73,29 +75,14 @@
                         </svg>
                     </button>
                 </div>
-                <div class="search-suggestions" id="search-suggestions">
-                    <div class="suggestion" data-company="TCS Hinjewadi Pune">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        TCS Hinjewadi Pune
-                    </div>
-                    <div class="suggestion" data-company="Infosys Hinjewadi">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Infosys Hinjewadi
-                    </div>
-                    <div class="suggestion" data-company="Wipro Kharadi">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Wipro Kharadi
-                    </div>
-                    <div class="suggestion" data-company="Cognizant Magarpatta">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Cognizant Magarpatta
-                    </div>
+                <div class="search-suggestions" id="search-suggestions" style="display: none;">
+                    <!-- dynamically populated by JS -->
                 </div>
             </div>
         </div>
 
         <div class="step-indicator hero-indicator">
-            <span class="step-num">01</span> / <span class="step-total">06</span>
+            <span class="step-num">01</span> / <span class="step-total">07</span>
         </div>
     </section>
 
@@ -126,6 +113,11 @@
                     <div class="progress-line"></div>
                     <div class="progress-dot" data-target="4">
                         <span class="dot-num">04</span>
+                        <span class="dot-label">Map</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="5">
+                        <span class="dot-num">05</span>
                         <span class="dot-label">Room</span>
                     </div>
                 </div>
@@ -151,11 +143,11 @@
                             <div class="avatar" style="background: #c4b5fd;"></div>
                             <div class="avatar" style="background: #ddd6fe;"></div>
                         </div>
-                        <span class="stat-count">+2461</span>
+                        <span class="stat-count" id="stat-count">+0</span>
                     </div>
                 </div>
                 <p class="company-card-desc">
-                    <strong>2,451 people</strong> from TCS already staying nearby
+                    <strong id="stat-people">0 people</strong> from <span id="stat-company-name">your company</span> already searching nearby
                 </p>
                 <div class="trust-badge">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -178,8 +170,11 @@
         </div>
 
         <div class="step-nav">
+            <button class="back-btn back-btn-dark" data-back="0" aria-label="Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
             <div class="step-indicator">
-                <span class="step-num">02</span> / <span class="step-total">06</span>
+                <span class="step-num">02</span> / <span class="step-total">07</span>
             </div>
             <button class="next-btn" id="btn-to-food" aria-label="Next">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -206,7 +201,9 @@
                     <div class="progress-line"></div>
                     <div class="progress-dot" data-target="3"><span class="dot-num">03</span><span class="dot-label">Facilities</span></div>
                     <div class="progress-line"></div>
-                    <div class="progress-dot" data-target="4"><span class="dot-num">04</span><span class="dot-label">Room</span></div>
+                    <div class="progress-dot" data-target="4"><span class="dot-num">04</span><span class="dot-label">Map</span></div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="5"><span class="dot-num">05</span><span class="dot-label">Room</span></div>
                 </div>
             </div>
         </div>
@@ -215,13 +212,7 @@
             <h2 class="section-title">Let's find you great food</h2>
             <p class="section-subtitle">Plenty of tasty and affordable options around your workplace.</p>
 
-            <div class="view-toggle-container">
-                <button class="view-toggle-btn active" data-view="list">List View</button>
-                <button class="view-toggle-btn" data-view="map">Map View</button>
-            </div>
-
-            <div id="food-list-view">
-                <div class="food-tabs" id="food-tabs">
+            <div class="food-tabs" id="food-tabs">
                 <button class="food-tab active" data-type="all">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
                     <span>All</span>
@@ -245,116 +236,19 @@
             </div>
 
             <div class="food-cards" id="food-cards">
-                <div class="food-card" data-type="mess">
-                    <div class="food-card-img">
-                        <img src="images/food.png" alt="Sai Krishna Mess" />
-                        <span class="food-badge veg">Veg</span>
-                    </div>
-                    <div class="food-card-info">
-                        <h4>Sai Krishna Mess</h4>
-                        <div class="food-rating">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                            <span>4.6</span>
-                            <span class="rating-count">(312)</span>
-                        </div>
-                        <div class="food-meta">
-                            <span class="food-meals">Breakfast • Lunch • Dinner</span>
-                            <span class="food-distance">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                3 min walk
-                            </span>
-                        </div>
-                        <div class="food-price">
-                            <span class="price-amount">₹3,200</span>
-                            <span class="price-period">/month</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="food-card" data-type="tiffin">
-                    <div class="food-card-img">
-                        <img src="images/food.png" alt="Annapurna Tiffin" />
-                        <span class="food-badge home">Home-style</span>
-                    </div>
-                    <div class="food-card-info">
-                        <h4>Annapurna Tiffin</h4>
-                        <div class="food-rating">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                            <span>4.8</span>
-                            <span class="rating-count">(189)</span>
-                        </div>
-                        <div class="food-meta">
-                            <span class="food-meals">Lunch • Dinner</span>
-                            <span class="food-distance">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                5 min walk
-                            </span>
-                        </div>
-                        <div class="food-price">
-                            <span class="price-amount">₹2,800</span>
-                            <span class="price-period">/month</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="food-card" data-type="cafes">
-                    <div class="food-card-img">
-                        <img src="images/food.png" alt="Cafe Starter" />
-                        <span class="food-badge nonveg">Non-Veg</span>
-                    </div>
-                    <div class="food-card-info">
-                        <h4>Starter Cafe & Bites</h4>
-                        <div class="food-rating">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                            <span>4.3</span>
-                            <span class="rating-count">(95)</span>
-                        </div>
-                        <div class="food-meta">
-                            <span class="food-meals">Open till 12 AM</span>
-                            <span class="food-distance">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                7 min walk
-                            </span>
-                        </div>
-                        <div class="food-price">
-                            <span class="price-amount">₹4,500</span>
-                            <span class="price-period">/month</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </div>
-
-            <div id="food-map-view" style="display: none;">
-                <div class="map-visual food-map-visual">
-                    <div class="map-grid">
-                        <div class="map-road map-road-h" style="top: 30%"></div>
-                        <div class="map-road map-road-v" style="left: 40%"></div>
-                        <div class="map-road map-road-h" style="top: 60%"></div>
-                    </div>
-                    <div class="map-pin food-pin" style="top: 20%; left: 20%;">
-                        <div class="map-pin-label"><strong>Sai Krishna Mess</strong><span>₹3,200/mo</span></div>
-                    </div>
-                    <div class="map-pin food-pin" style="top: 40%; left: 60%;">
-                        <div class="map-pin-label"><strong>Annapurna Tiffin</strong><span>₹2,800/mo</span></div>
-                    </div>
-                    <div class="map-pin gym-pin" style="top: 70%; left: 20%;">
-                        <div class="map-pin-label"><strong>Fitness Pro Gym</strong><span>Imp Need</span></div>
-                    </div>
-                    <div class="map-pin shop-pin" style="top: 50%; left: 80%;">
-                        <div class="map-pin-label"><strong>Style Haircut</strong><span>Imp Need</span></div>
-                    </div>
-                    <div class="map-pin map-pin-office" style="top: 45%; left: 40%;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#7C3AED"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                        <div class="map-pin-label"><strong>Office</strong></div>
-                    </div>
+                <div style="padding:40px;text-align:center;color:#7C3AED;">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">🍽️</div>
+                    <p style="font-weight:600;">Select your company to see nearby food options</p>
                 </div>
             </div>
         </div>
 
         <div class="step-nav">
+            <button class="back-btn" data-back="1" aria-label="Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
             <div class="step-indicator">
-                <span class="step-num">03</span> / <span class="step-total">06</span>
+                <span class="step-num">03</span> / <span class="step-total">07</span>
             </div>
             <button class="next-btn" id="btn-to-facilities" aria-label="Next">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -380,7 +274,9 @@
                         <span class="dot-label">Facilities</span>
                     </div>
                     <div class="progress-line"></div>
-                    <div class="progress-dot" data-target="4"><span class="dot-num">04</span><span class="dot-label">Room</span></div>
+                    <div class="progress-dot" data-target="4"><span class="dot-num">04</span><span class="dot-label">Map</span></div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="5"><span class="dot-num">05</span><span class="dot-label">Room</span></div>
                 </div>
             </div>
         </div>
@@ -466,18 +362,25 @@
         </div>
 
         <div class="step-nav">
+            <button class="back-btn" data-back="2" aria-label="Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
             <div class="step-indicator">
-                <span class="step-num">04</span> / <span class="step-total">06</span>
+                <span class="step-num">05</span> / <span class="step-total">07</span>
             </div>
-            <button class="next-btn" id="btn-to-room" aria-label="Next">
+            <button class="next-btn" id="btn-to-map" aria-label="Next">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
         </div>
     </section>
 
-    <!-- ==================== STEP 5: ROOM SHARING ==================== -->
-    <section class="step step-room" data-step="4" id="step-room">
-        <div class="step-bg step-bg-warm"></div>
+
+    <!-- ==================== STEP 4: NEIGHBORHOOD MAP ==================== -->
+    <section class="step step-map" data-step="4" id="step-map">
+        <div class="step-bg">
+            <img src="images/hero.png" alt="Map scene" class="step-bg-img" style="filter: blur(8px) brightness(0.8) contrast(1.1); transform: scale(1.1);" />
+            <div class="step-bg-overlay step-bg-overlay-dark"></div>
+        </div>
 
         <div class="step-header">
             <div class="progress-bar">
@@ -490,6 +393,78 @@
                     <div class="progress-line filled"></div>
                     <div class="progress-dot active" data-target="4">
                         <span class="dot-num">04</span>
+                        <span class="dot-label">Map</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-dot" data-target="5"><span class="dot-num">05</span><span class="dot-label">Room</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content map-content" style="padding: 10px 24px; display: flex; flex-direction: column;">
+            <div class="real-map-wrapper">
+                
+                <div class="real-map-filters">
+                    <button class="real-map-pill active" data-filter="all">All</button>
+                    <button class="real-map-pill" data-filter="pg">PGs & Hostels</button>
+                    <button class="real-map-pill" data-filter="gym">Gyms & Pools</button>
+                    <button class="real-map-pill" data-filter="food">Food & Restaurants</button>
+                    <button class="real-map-pill icon-pill verified-pill" data-filter="verified">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verified
+                    </button>
+                </div>
+                
+                <div class="real-map-toggle">
+                    <span>Search as I move the map</span>
+                    <div class="toggle-switch active"><div class="toggle-knob"></div></div>
+                </div>
+                
+                <button class="real-map-search-area">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Search this area
+                </button>
+                
+                <div class="real-map-legend">
+                    <div class="legend-item"><span class="legend-shape" style="border-color: #10b981; border-radius: 50%;"></span>PGs/Hostels</div>
+                    <div class="legend-item"><span class="legend-shape" style="border-color: #3b82f6; border-radius: 50%;"></span>Gyms/Pools</div>
+                    <div class="legend-item"><span class="legend-shape" style="border-color: #f59e0b; border-radius: 50%;"></span>Food</div>
+                    <div class="legend-item verified-legend"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verified</div>
+                </div>
+                
+                <div id="leaflet-map"></div>
+            </div>
+        </div>
+
+        <div class="step-nav">
+            <button class="back-btn" data-back="3" aria-label="Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <div class="step-indicator">
+                <span class="step-num">04</span> / <span class="step-total">07</span>
+            </div>
+            <button class="next-btn" id="btn-to-room" aria-label="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== STEP 5: ROOM SHARING ==================== -->
+    <section class="step step-room" data-step="5" id="step-room">
+        <div class="step-bg step-bg-warm"></div>
+
+        <div class="step-header">
+            <div class="progress-bar">
+                <div class="progress-dots">
+                    <div class="progress-dot completed" data-target="1"><span class="dot-num">01</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="2"><span class="dot-num">02</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="3"><span class="dot-num">03</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="4"><span class="dot-num">04</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot active" data-target="5">
+                        <span class="dot-num">05</span>
                         <span class="dot-label">Room</span>
                     </div>
                 </div>
@@ -551,8 +526,11 @@
         </div>
 
         <div class="step-nav">
+            <button class="back-btn" data-back="4" aria-label="Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
             <div class="step-indicator">
-                <span class="step-num">05</span> / <span class="step-total">06</span>
+                <span class="step-num">06</span> / <span class="step-total">07</span>
             </div>
             <button class="next-btn" id="btn-to-matches" aria-label="Next">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -561,7 +539,7 @@
     </section>
 
     <!-- ==================== STEP 6: BEST MATCHES ==================== -->
-    <section class="step step-matches" data-step="5" id="step-matches">
+    <section class="step step-matches" data-step="6" id="step-matches">
         <div class="step-bg step-bg-white"></div>
 
         <div class="step-header">
@@ -574,6 +552,8 @@
                     <div class="progress-dot completed" data-target="3"><span class="dot-num">03</span></div>
                     <div class="progress-line filled"></div>
                     <div class="progress-dot completed" data-target="4"><span class="dot-num">04</span></div>
+                    <div class="progress-line filled"></div>
+                    <div class="progress-dot completed" data-target="5"><span class="dot-num">05</span></div>
                 </div>
             </div>
         </div>
@@ -583,78 +563,9 @@
             <p class="section-subtitle">Top stays near <span class="text-purple" id="matches-company">TCS Hinjewadi</span> based on your preferences.</p>
 
             <div class="match-cards" id="match-cards">
-                <div class="match-card">
-                    <div class="match-card-img">
-                        <img src="images/stay.png" alt="Green Valley Stays" />
-                        <span class="verified-badge">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                            Verified
-                        </span>
-                    </div>
-                    <div class="match-card-info">
-                        <div class="match-card-top">
-                            <h4>Green Valley Stays</h4>
-                            <span class="match-distance">2 min from TCS</span>
-                        </div>
-                        <div class="match-rating">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                            <span>4.5</span>
-                            <span class="rating-count">(128)</span>
-                        </div>
-                        <div class="match-amenities">
-                            <span class="amenity-pill">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
-                                Wi-Fi
-                            </span>
-                            <span class="amenity-pill">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 11h-4.17l3.24-3.24-1.41-1.42L15 11h-2V9l4.66-4.66-1.42-1.41L13 6.17V2h-2v4.17L7.76 2.93 6.34 4.34 11 9v2H9L4.34 6.34 2.93 7.76 6.17 11H2v2h4.17l-3.24 3.24 1.41 1.42L9 13h2v2l-4.66 4.66 1.42 1.41L11 17.83V22h2v-4.17l3.24 3.24 1.42-1.41L13 15v-2h2l4.66 4.66 1.41-1.42L17.83 13H22z"/></svg>
-                                AC
-                            </span>
-                            <span class="amenity-pill">Swimming Pool</span>
-                            <span class="amenity-pill">3 Sharing</span>
-                        </div>
-                        <div class="match-bottom">
-                            <div class="match-price">
-                                <span class="price-amount">₹6,500</span>
-                                <span class="price-period">/month</span>
-                            </div>
-                            <button class="view-details-btn" id="view-details-btn">View Details</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="match-card">
-                    <div class="match-card-img">
-                        <img src="images/stay.png" alt="Sunrise PG" />
-                        <span class="verified-badge">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                            Verified
-                        </span>
-                    </div>
-                    <div class="match-card-info">
-                        <div class="match-card-top">
-                            <h4>Sunrise PG</h4>
-                            <span class="match-distance">5 min from TCS</span>
-                        </div>
-                        <div class="match-rating">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                            <span>4.2</span>
-                            <span class="rating-count">(85)</span>
-                        </div>
-                        <div class="match-amenities">
-                            <span class="amenity-pill">Wi-Fi</span>
-                            <span class="amenity-pill">Gym</span>
-                            <span class="amenity-pill">Laundry</span>
-                            <span class="amenity-pill">2 Sharing</span>
-                        </div>
-                        <div class="match-bottom">
-                            <div class="match-price">
-                                <span class="price-amount">₹7,500</span>
-                                <span class="price-period">/month</span>
-                            </div>
-                            <button class="view-details-btn">View Details</button>
-                        </div>
-                    </div>
+                <div style="padding:40px;text-align:center;color:#7C3AED;">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">🏠</div>
+                    <p style="font-weight:600;">Finding PGs & hostels near your company...</p>
                 </div>
             </div>
 
@@ -662,8 +573,11 @@
         </div>
 
         <div class="step-nav">
+            <button class="back-btn" data-back="5" aria-label="Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
             <div class="step-indicator">
-                <span class="step-num">06</span> / <span class="step-total">06</span>
+                <span class="step-num">07</span> / <span class="step-total">07</span>
             </div>
             <button class="next-btn" id="btn-to-summary" aria-label="Next">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -672,7 +586,7 @@
     </section>
 
     <!-- ==================== STEP 7: SUMMARY ==================== -->
-    <section class="step step-summary" data-step="6" id="step-summary">
+    <section class="step step-summary" data-step="7" id="step-summary">
         <div class="step-bg step-bg-summary"></div>
 
         <div class="summary-content">

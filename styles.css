@@ -1057,6 +1057,59 @@ button {
     box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
 }
 
+.back-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+/* Dark variant for light-background steps */
+.back-btn-dark {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: #5B21B6;
+    backdrop-filter: blur(8px);
+}
+
+.back-btn-dark:hover {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: #7C3AED;
+    color: #7C3AED;
+    transform: scale(1.05);
+}
+
+/* For white-bg steps, make back btn dark */
+.step-bg-white ~ * .back-btn,
+.step-bg-warm ~ * .back-btn,
+.step-bg-summary ~ * .back-btn {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.3);
+    color: var(--primary);
+}
+
+.step-bg-white ~ * .back-btn:hover,
+.step-bg-warm ~ * .back-btn:hover,
+.step-bg-summary ~ * .back-btn:hover {
+    background: rgba(124, 58, 237, 0.15);
+    border-color: var(--primary);
+}
+
 /* 15. SUMMARY SECTION */
 .summary-content {
     position: relative;
@@ -1385,42 +1438,242 @@ button {
     }
 }
 
-/* VIEW TOGGLE & FOOD MAP */
-.view-toggle-container {
-    display: flex;
-    background: rgba(255,255,255,0.1);
-    border-radius: var(--radius-pill);
-    padding: 4px;
+/* 12. REAL MAP SECTION */
+.real-map-wrapper {
+    position: relative;
+    flex: 1;
+    min-height: 500px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    background: #fdfbfb;
     margin-bottom: 20px;
-    width: fit-content;
-    border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(5px);
 }
-.view-toggle-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255,255,255,0.7);
+
+#leaflet-map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.real-map-filters {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    pointer-events: none;
+}
+.real-map-filters::-webkit-scrollbar { display: none; }
+
+.real-map-pill {
+    pointer-events: auto;
     padding: 8px 16px;
-    border-radius: var(--radius-pill);
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 50px;
     font-size: 0.85rem;
     font-weight: 600;
-    transition: all 0.3s;
+    color: #4b5563;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.2s;
 }
-.view-toggle-btn.active {
+
+.real-map-pill.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.real-map-pill.active.verified-pill {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.real-map-pill.active.food-pill {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.icon-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.verified-pill { color: #10b981; border-color: #10b981; }
+.food-pill { color: #f59e0b; border-color: #f59e0b; }
+
+.real-map-toggle {
+    position: absolute;
+    top: 64px;
+    left: 16px;
+    z-index: 1000;
     background: white;
-    color: var(--primary);
+    padding: 8px 16px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-
-.food-map-visual {
-    height: 350px;
-    border-radius: var(--radius-card);
-    margin-top: 10px;
-    background: #fdfbfb;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+.real-map-toggle span {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #4b5563;
+}
+.toggle-switch {
+    width: 36px;
+    height: 20px;
+    background: #d1d5db;
+    border-radius: 50px;
     position: relative;
-    overflow: hidden;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.toggle-switch.active { background: var(--primary); }
+.toggle-knob {
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: 0.3s;
+}
+.toggle-switch.active .toggle-knob { left: 18px; }
+
+.real-map-search-area {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.real-map-search-area:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+
+.real-map-legend {
+    position: absolute;
+    bottom: 24px;
+    left: 16px;
+    z-index: 1000;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+.legend-shape {
+    width: 14px;
+    height: 14px;
+    border: 2px solid;
+}
+.verified-legend { color: #10b981; }
+.food-legend { color: #f59e0b; }
+
+/* Custom Leaflet Marker (White Bubble) */
+.custom-map-marker {
+    background: transparent;
+    border: none;
+}
+.marker-bubble {
+    background: white;
+    padding: 6px 12px 6px 6px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: relative;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1a1a2e;
+    white-space: nowrap;
+}
+.marker-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: white transparent transparent transparent;
+    display: block;
+    width: 0;
+}
+.marker-icon-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+.marker-bg-green { background: #10b981; }
+.marker-bg-blue { background: #3b82f6; }
+.marker-bg-orange { background: #f59e0b; }
+.marker-bg-purple { background: #7C3AED; }
+
+.office-marker {
+    background: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #e5e7eb;
+    white-space: nowrap;
 }
 
-.food-pin .map-pin-label strong { color: var(--accent); }
-.gym-pin .map-pin-label strong { color: #ec4899; }
-.shop-pin .map-pin-label strong { color: #22c55e; }
+.map-circle-marker {
+    background: #8b5cf6;
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);
+    border: 2px solid white;
+}
+
