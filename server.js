@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // Serve frontend files (index.html, styles.css, app.js)
+app.use(express.static(path.join(__dirname, 'public'))); // Serve frontend files from public directory
 
 // Simple in-memory cache to avoid hammering Overpass for same location
 const cache = new Map();
@@ -520,4 +520,8 @@ app.get('/api/nearby', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`NearDesk backend running on http://localhost:${PORT}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`NearDesk backend running on http://localhost:${PORT}`));
+}
+
+module.exports = app;
