@@ -2,7 +2,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. STATE MANAGEMENT
     const state = {
-        currentStep: 0,
+        currentStep: -1,
+        userRole: 'seeker', // seeker | provider
+        authMode: 'login', // login | signup
         company: 'TCS Hinjewadi Pune',
         food: 'Mezza9',
         foodPrice: 3200,
@@ -19,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.classList.add('hidden');
         setTimeout(() => {
             if(loader) loader.remove();
-            initStep(0); // Initialize first step after loader
+            initStep(-2); // Initialize Role Select step after loader
         }, 500);
     }, 2500);
 
@@ -98,11 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const steps = document.querySelectorAll('.step');
     
     function goToStep(index) {
-        if (index < 0 || index >= steps.length) return;
-        
         const currentElement = document.querySelector(`.step[data-step="${state.currentStep}"]`);
         const nextElement = document.querySelector(`.step[data-step="${index}"]`);
         
+        if(!nextElement) return;
+
         if(currentElement) {
             currentElement.classList.remove('active');
             currentElement.classList.add('exit-left');
@@ -120,8 +122,164 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.back-btn');
         if (!btn) return;
-        const target = parseInt(btn.getAttribute('data-back'));
-        if (!isNaN(target)) goToStep(target);
+        const target = btn.getAttribute('data-back');
+        if (target !== null) {
+            goToStep(isNaN(target) ? target : parseInt(target));
+        }
+    });
+
+    // ── ROLE SELECTION LOGIC (STEP -2) ─────────────────────────────
+    const roleCards = document.querySelectorAll('#step-role-select .role-card');
+    roleCards.forEach(card => {
+        card.addEventListener('click', () => {
+            state.userRole = card.dataset.role;
+            const title = document.getElementById('auth-title');
+            if (title) {
+                title.textContent = state.userRole === 'provider' ? 'Provider Login' : 'Seeker Login';
+            }
+            goToStep('-1');
+        });
+    });
+
+    // ── AUTHENTICATION LOGIC (STEP -1) ─────────────────────────────
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const signupFields = document.getElementById('signup-fields');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const authError = document.getElementById('auth-error');
+
+    authTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            authTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            state.authMode = tab.dataset.action;
+            
+            const title = document.getElementById('auth-title');
+            
+            if (state.authMode === 'signup') {
+                signupFields.style.display = 'block';
+                authSubmitBtn.textContent = 'Create Account';
+                if (title) title.textContent = state.userRole === 'provider' ? 'Provider Sign Up' : 'Seeker Sign Up';
+            } else {
+                signupFields.style.display = 'none';
+                authSubmitBtn.textContent = 'Login';
+                if (title) title.textContent = state.userRole === 'provider' ? 'Provider Login' : 'Seeker Login';
+            }
+        });
+    });
+
+    authSubmitBtn.addEventListener('click', async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const name = document.getElementById('auth-name').value;
+
+        if (!email || !password || (state.authMode === 'signup' && !name)) {
+            authError.textContent = 'Please fill all required fields.';
+            authError.style.display = 'block';
+            return;
+        }
+
+        try {
+            authSubmitBtn.textContent = 'Loading...';
+            const endpoint = state.authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+            const body = state.authMode === 'signup' 
+                ? { name, email, password, role: state.userRole }
+                : { email, password };
+
+            const res = await fetch(`${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Authentication failed');
+
+            // If login, set state role to backend returned role
+            if (state.authMode === 'login' && data.user) {
+                state.userRole = data.user.role;
+            }
+
+            authError.style.display = 'none';
+            // Route based on role
+            if (state.userRole === 'provider') {
+                goToStep('p1');
+            } else {
+                goToStep(0);
+            }
+        } catch (e) {
+            authError.textContent = e.message;
+            authError.style.display = 'block';
+        } finally {
+            authSubmitBtn.textContent = state.authMode === 'signup' ? 'Create Account' : 'Login';
+        }
+    });
+
+    // ── PROVIDER FLOW LOGIC ────────────────────────────────────────────────
+    document.querySelectorAll('.provider-type-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const ptype = card.dataset.ptype;
+            if (ptype === 'food') goToStep('p2-food');
+            else if (ptype === 'pg') {
+                // Populate PG facilities from existing ones if not done
+                const pgFacContainer = document.getElementById('p-pg-facilities');
+                if (pgFacContainer && pgFacContainer.children.length === 0) {
+                    const tiles = document.querySelectorAll('#step-facilities .facility-tile');
+                    tiles.forEach(tile => {
+                        const clone = tile.cloneNode(true);
+                        clone.classList.remove('selected');
+                        clone.addEventListener('click', () => clone.classList.toggle('selected'));
+                        pgFacContainer.appendChild(clone);
+                    });
+                }
+                goToStep('p2-pg');
+            }
+        });
+    });
+
+    document.getElementById('btn-submit-food')?.addEventListener('click', async () => {
+        const btn = document.getElementById('btn-submit-food');
+        btn.textContent = 'Submitting...';
+        const data = {
+            type: 'food',
+            lat: state.providerLat,
+            lon: state.providerLon,
+            name: document.getElementById('p-food-name').value,
+            timings: document.getElementById('p-food-timing').value,
+            monthlyPrice: document.getElementById('p-food-price').value,
+            menu: document.getElementById('p-food-menu').value
+        };
+        await fetch('/api/provider/register', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+        });
+        btn.textContent = 'List Food Centre';
+        goToStep('p3');
+    });
+
+    document.getElementById('btn-submit-pg')?.addEventListener('click', async () => {
+        const btn = document.getElementById('btn-submit-pg');
+        btn.textContent = 'Submitting...';
+        
+        // Collect beds
+        const beds = Array.from(document.querySelectorAll('#p-pg-beds input:checked')).map(el => el.value);
+        // Collect facilities
+        const facilities = Array.from(document.querySelectorAll('#p-pg-facilities .facility-tile.selected span')).map(el => el.textContent);
+
+        const data = {
+            type: 'pg',
+            lat: state.providerLat,
+            lon: state.providerLon,
+            name: document.getElementById('p-pg-name').value,
+            landmark: document.getElementById('p-pg-landmark').value,
+            capacity: document.getElementById('p-pg-capacity').value,
+            vacancies: document.getElementById('p-pg-vacancies').value,
+            beds,
+            facilities
+        };
+        await fetch('/api/provider/register', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+        });
+        btn.textContent = 'List PG Property';
+        goToStep('p3');
     });
 
     function initStep(index) {
@@ -141,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(statCount) statCount.textContent = '+0';
             if(statPeople) statPeople.textContent = '0 people';
 
-            fetch(`http://localhost:3001/api/search-count?company=${encodeURIComponent(state.company)}`)
+            fetch(`/api/search-count?company=${encodeURIComponent(state.company)}`)
                 .then(r => r.json())
                 .then(({ count }) => {
                     const target = count; // real number from DB
@@ -209,13 +367,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchNearbyData(lat, lon) {
         try {
-            const nRes = await fetch(`http://localhost:3001/api/nearby?lat=${lat}&lon=${lon}`);
+            const nRes = await fetch(`/api/nearby?lat=${lat}&lon=${lon}`);
             const data = await nRes.json();
-            if (!Array.isArray(data) || data.length === 0) {
+            
+            // Backend now returns { elements: [...] } with raw OSM nodes + custom providers
+            const elements = Array.isArray(data) ? data : (data.elements || []);
+            if (elements.length === 0) {
                 console.warn('No nearby data returned for', lat, lon);
             }
-            // Normalize .lng field
-            mockProperties = data.map(p => ({ ...p, lng: p.lng !== undefined ? p.lng : p.lon }));
+            
+            // Normalize each element into the format our renderers expect
+            mockProperties = elements.map(el => {
+                const tags = el.tags || {};
+                const name = tags.name || el.name;
+                if (!name) return null;
+                
+                const elLat = el.lat ?? el.center?.lat;
+                const elLon = el.lon ?? el.center?.lon;
+                if (!elLat || !elLon) return null;
+                
+            // Determine type
+                let type = 'food';
+                if (tags.tourism === 'hostel' || tags.tourism === 'guest_house' || 
+                    (name && /PG|Hostel|hostel|Paying Guest|coliving/i.test(name))) {
+                    type = 'pg';
+                } else if (tags.leisure === 'fitness_centre' || tags.leisure === 'swimming_pool' || tags.amenity === 'gym') {
+                    type = 'gym';
+                }
+                
+                // Determine icon
+                const amenity = tags.amenity || '';
+                let icon = '🍽️';
+                if (type === 'gym') icon = tags.leisure === 'swimming_pool' ? '🏊' : '💪';
+                else if (type === 'pg') icon = '🏠';
+                else if (amenity === 'cafe' || (tags.neardesk_blr_food && (tags.cuisine||'').toLowerCase().includes('coffee'))) icon = '☕';
+                else if (amenity === 'fast_food') icon = '🍔';
+                
+                return {
+                    id: el.id,
+                    name,
+                    type,
+                    lat: elLat,
+                    lng: elLon,
+                    icon,
+                    verified: Math.random() > 0.5,
+                    tags: tags, // Preserve tags for neardesk_custom/blr_food detection
+                    // Expose Bengaluru curated food data at top level for easy rendering
+                    blr_food: tags.neardesk_blr_food ? tags.blr_food_data : null
+                };
+            }).filter(Boolean);
             renderFoodCards();
             if (markersLayer) renderMapMarkers('all');
             if (window.updateMapOffice) window.updateMapOffice();
@@ -237,35 +437,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const companyInput = document.getElementById('company-input');
     const searchSuggestions = document.getElementById('search-suggestions');
     const searchBtn = document.getElementById('search-btn');
-    let searchTimeout;
 
-    if (companyInput && searchSuggestions) {
-        companyInput.addEventListener('input', (e) => {
+    function setupLocationSearch(inputId, suggId, onSelect, onHover = null) {
+        const input = document.getElementById(inputId);
+        const sugg = document.getElementById(suggId);
+        let timeout;
+
+        if (!input || !sugg) return;
+
+        input.addEventListener('input', (e) => {
             const query = e.target.value.trim();
             if (query.length > 2) {
-                clearTimeout(searchTimeout);
-                searchSuggestions.innerHTML = '<div class="suggestion">Searching...</div>';
-                searchSuggestions.style.display = 'flex';
+                clearTimeout(timeout);
+                sugg.innerHTML = '<div class="suggestion">Searching...</div>';
+                sugg.style.display = 'flex';
                 
-                searchTimeout = setTimeout(async () => {
+                timeout = setTimeout(async () => {
                     try {
-                        const res = await fetch(`http://localhost:3001/api/search-companies?q=${encodeURIComponent(query)}`);
+                        const res = await fetch(`/api/search-companies?q=${encodeURIComponent(query)}`);
                         const data = await res.json();
-                        searchSuggestions.innerHTML = '';
+                        sugg.innerHTML = '';
                         if (data.length === 0) {
-                            searchSuggestions.innerHTML = '<div class="suggestion">No results found</div>';
+                            sugg.innerHTML = '<div class="suggestion">No results found</div>';
                         } else {
                             data.forEach(item => {
                                 const div = document.createElement('div');
                                 div.className = 'suggestion';
-                                // Parse name + location from display_name
                                 const parts = item.display_name.split(',').map(s => s.trim());
                                 const name = parts[0];
                                 const location = parts.slice(1, 3).join(', ');
                                 const label = parts.slice(0, 3).join(', ');
                                 const itemLat = parseFloat(item.lat);
                                 const itemLon = parseFloat(item.lon);
-                                // Pick icon based on type
                                 const typeIcons = { 'office': '🏢', 'restaurant': '🍽️', 'shop': '🛒', 'hospital': '🏥', 'school': '🎓', 'hotel': '🏨', 'bank': '🏦', 'fuel': '⛽', 'supermarket': '🛒' };
                                 const icon = typeIcons[item.type] || '🏢';
                                 div.innerHTML = `
@@ -277,41 +480,58 @@ document.addEventListener('DOMContentLoaded', () => {
                                         </div>
                                     </div>`;
                                 
-                                // Pre-fetch on hover — data ready before user even clicks
-                                div.addEventListener('mouseenter', () => {
-                                    fetchNearbyData(itemLat, itemLon);
-                                }, { once: true });
+                                if (onHover) {
+                                    div.addEventListener('mouseenter', () => onHover(itemLat, itemLon), { once: true });
+                                }
 
                                 div.addEventListener('click', () => {
-                                    companyInput.value = label;
-                                    state.company = label;
-                                    state.lat = itemLat;
-                                    state.lon = itemLon;
-                                    searchSuggestions.style.display = 'none';
-
-                                    // Track this real search — fire and forget
-                                    fetch('http://localhost:3001/api/track-search', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ company: label })
-                                    }).catch(() => {}); // silent fail if offline
-
-                                    // Fire nearby fetch in background — don't block navigation
-                                    fetchNearbyData(state.lat, state.lon);
-                                    goToStep(1);
+                                    input.value = label;
+                                    sugg.style.display = 'none';
+                                    onSelect(label, itemLat, itemLon);
                                 });
-                                searchSuggestions.appendChild(div);
+                                sugg.appendChild(div);
                             });
                         }
                     } catch(e) {
-                        searchSuggestions.innerHTML = '<div class="suggestion">Error fetching results</div>';
+                        sugg.innerHTML = '<div class="suggestion">Error fetching results</div>';
                     }
                 }, 500);
             } else {
-                searchSuggestions.style.display = 'none';
+                sugg.style.display = 'none';
             }
         });
+    }
 
+    // Initialize Seeker Hero Search
+    setupLocationSearch('company-input', 'search-suggestions', (label, lat, lon) => {
+        state.company = label;
+        state.lat = lat;
+        state.lon = lon;
+
+        // Track this real search — fire and forget
+        fetch('/api/track-search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ company: label })
+        }).catch(() => {}); // silent fail if offline
+
+        // Fire nearby fetch in background — don't block navigation
+        fetchNearbyData(state.lat, state.lon);
+        goToStep(1);
+    }, (lat, lon) => fetchNearbyData(lat, lon));
+
+    // Initialize Provider Form Searches
+    setupLocationSearch('p-food-loc', 'p-food-sugg', (label, lat, lon) => {
+        state.providerLat = lat;
+        state.providerLon = lon;
+    });
+
+    setupLocationSearch('p-pg-loc', 'p-pg-sugg', (label, lat, lon) => {
+        state.providerLat = lat;
+        state.providerLon = lon;
+    });
+
+    if (companyInput) {
         companyInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && companyInput.value.trim() !== '') {
                 state.company = companyInput.value.trim();
@@ -377,8 +597,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!foodContainer) return;
         
         foodContainer.innerHTML = '';
-        // Show up to 6 real food items
-        const foodItems = mockProperties.filter(p => p.type === 'food').slice(0, 6);
+        // Show up to 9 real food items (more since Bengaluru DB may have many)
+        const foodItems = mockProperties.filter(p => p.type === 'food').slice(0, 9);
         
         if (foodItems.length === 0) {
             foodContainer.innerHTML = `
@@ -391,9 +611,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         foodItems.forEach((item, index) => {
             const isFirst = index === 0;
+            const isCustom = item.tags && item.tags.neardesk_custom;
+            const isBlrFood = item.blr_food !== null && item.blr_food !== undefined;
+            const customData = isCustom ? item.tags.custom_data : null;
+            const blrData = isBlrFood ? item.blr_food : null;
+
+            // Determine display values — priority: blrData > customData > fallback
+            let displayName, displayPrice, timings, displayRating, ratingCount, displayArea;
+
+            if (isBlrFood && blrData) {
+                displayName = blrData.name;
+                displayPrice = blrData.price_for_two || 500;
+                timings = blrData.cuisine || 'Restaurant';
+                displayRating = blrData.rating || (3.5 + Math.random() * 1.4).toFixed(1);
+                ratingCount = Math.floor(200 + Math.random() * 800);
+                displayArea = blrData.area || 'Bengaluru';
+            } else if (isCustom && customData) {
+                displayName = customData.name;
+                displayPrice = parseInt(customData.monthlyPrice) || 2500;
+                timings = customData.timings || 'Restaurant';
+                displayRating = '5.0';
+                ratingCount = 'New';
+                displayArea = null;
+            } else {
+                displayName = item.name;
+                displayPrice = 500;
+                timings = item.tags?.cuisine || 'Restaurant';
+                displayRating = (3.5 + Math.random() * 1.4).toFixed(1);
+                ratingCount = Math.floor(50 + Math.random() * 450);
+                displayArea = item.tags?.['addr:suburb'] || null;
+            }
+
             if (isFirst) {
-                state.food = item.name;
-                state.foodPrice = 2500;
+                state.food = displayName;
+                state.foodPrice = displayPrice;
             }
 
             // Estimate distance from company in metres
@@ -403,39 +654,54 @@ document.addEventListener('DOMContentLoaded', () => {
             const distLabel = distM < 1000 ? `${distM}m away` : `${(distM / 1000).toFixed(1)}km away`;
             const walkMin = Math.round(distM / 80); // ~80m per min walk
 
-            // Badge label based on icon
+            // Badge label based on source
             let badgeClass = 'nonveg';
             let badgeLabel = 'Non-Veg';
-            if (item.icon === '☕') { badgeClass = 'veg'; badgeLabel = 'Cafe'; }
-            else if (item.icon === '🍔') { badgeClass = 'nonveg'; badgeLabel = 'Fast Food'; }
-            else if (item.verified) { badgeClass = 'veg'; badgeLabel = 'Verified'; }
+            let badgeStyle = '';
+
+            if (isCustom) { 
+                badgeClass = 'verified'; badgeLabel = '⭐ Verified Partner'; badgeStyle = 'background:#F59E0B;';
+            } else if (isBlrFood) { 
+                badgeClass = 'veg'; badgeLabel = '🗺️ Bengaluru Pick'; badgeStyle = 'background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;';
+            } else if (item.icon === '☕') { 
+                badgeClass = 'veg'; badgeLabel = 'Cafe';
+            } else if (item.icon === '🍔') { 
+                badgeClass = 'nonveg'; badgeLabel = 'Fast Food';
+            } else if (item.verified) { 
+                badgeClass = 'veg'; badgeLabel = 'Verified';
+            }
             
             const card = document.createElement('div');
             card.className = `food-card${isFirst ? ' selected' : ''}`;
             card.setAttribute('data-type', 'restaurants');
             
+            // Price label changes based on source
+            const priceLabel = (isBlrFood) ? 'for two' : isCustom ? '/month' : 'for two';
+            const priceDisplay = isBlrFood ? `₹${displayPrice.toLocaleString()}` : isCustom ? `₹${displayPrice.toLocaleString()}` : `₹${displayPrice}`;
+            
             card.innerHTML = `
                 <div class="food-card-img">
-                    <img src="images/food.png" alt="${item.name}" />
-                    <span class="food-badge ${badgeClass}">${badgeLabel}</span>
+                    <img src="images/food.png" alt="${displayName}" />
+                    <span class="food-badge ${badgeClass}" style="${badgeStyle}">${badgeLabel}</span>
                 </div>
                 <div class="food-card-info">
-                    <h4>${item.icon || '🍽️'} ${item.name}</h4>
+                    <h4>${item.icon || '🍽️'} ${displayName}</h4>
+                    ${displayArea ? `<div style="font-size:0.72rem;color:#9ca3af;margin-bottom:2px;">📍 ${displayArea}</div>` : ''}
                     <div class="food-rating">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                        <span>${(3.5 + Math.random() * 1.4).toFixed(1)}</span>
-                        <span class="rating-count">(${Math.floor(50 + Math.random() * 450)})</span>
+                        <span>${displayRating}</span>
+                        <span class="rating-count">(${ratingCount})</span>
                     </div>
                     <div class="food-meta">
-                        <span class="food-meals">Restaurant</span>
+                        <span class="food-meals">${timings}</span>
                         <span class="food-distance">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                             ${distLabel} · ${walkMin} min walk
                         </span>
                     </div>
                     <div class="food-price">
-                        <span class="price-amount">₹2,500</span>
-                        <span class="price-period">/month</span>
+                        <span class="price-amount">${priceDisplay}</span>
+                        <span class="price-period">${priceLabel}</span>
                     </div>
                 </div>
             `;
@@ -443,8 +709,8 @@ document.addEventListener('DOMContentLoaded', () => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('.food-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
-                state.food = item.name;
-                state.foodPrice = 2500;
+                state.food = displayName;
+                state.foodPrice = displayPrice;
             });
             
             foodContainer.appendChild(card);
@@ -474,28 +740,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = '';
         pgItems.forEach((pg, i) => {
+            const isCustom = pg.tags && pg.tags.neardesk_custom;
+            const customData = isCustom ? pg.tags.custom_data : null;
+            
+            const displayName = isCustom ? customData.name : pg.name;
+
             const dLat = (pg.lat - state.lat) * 111000;
             const dLng = (pg.lng - state.lon) * 111000 * Math.cos(state.lat * Math.PI / 180);
             const distM = Math.round(Math.sqrt(dLat * dLat + dLng * dLng));
             const distLabel = distM < 1000 ? `${distM}m from ${companyShort}` : `${(distM/1000).toFixed(1)}km from ${companyShort}`;
             const walkMin = Math.round(distM / 80);
-            const rating = (3.8 + Math.random() * 1.1).toFixed(1);
-            const reviews = Math.floor(40 + Math.random() * 300);
+            const rating = isCustom ? '5.0' : (3.8 + Math.random() * 1.1).toFixed(1);
+            const reviews = isCustom ? 'New' : Math.floor(40 + Math.random() * 300);
             const price = state.roomPrice || 6500;
-            // Pick 3 random amenities + selected facilities
-            const shuffled = [...amenityPool].sort(() => Math.random() - 0.5);
-            const amenities = [...new Set([...state.facilities.slice(0,2), ...shuffled])].slice(0, 4);
+            
+            let amenities = [];
+            if (isCustom && customData.facilities) {
+                amenities = customData.facilities.slice(0, 4);
+            } else {
+                const shuffled = [...amenityPool].sort(() => Math.random() - 0.5);
+                amenities = [...new Set([...state.facilities.slice(0,2), ...shuffled])].slice(0, 4);
+            }
+
+            const customInfoBadge = isCustom && customData.vacancies 
+                ? `<span style="font-size:0.7rem; background:#7C3AED; color:white; padding:2px 6px; border-radius:4px; margin-left:8px;">${customData.vacancies} Vacancies</span>` 
+                : '';
 
             const card = document.createElement('div');
             card.className = 'match-card';
             card.innerHTML = `
                 <div class="match-card-img">
-                    <img src="images/stay.png" alt="${pg.name}" />
-                    ${pg.verified ? `<span class="verified-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Verified</span>` : ''}
+                    <img src="images/stay.png" alt="${displayName}" />
+                    ${isCustom ? `<span class="verified-badge" style="background:#F59E0B;"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Verified Partner</span>` : (pg.verified ? `<span class="verified-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Verified</span>` : '')}
                 </div>
                 <div class="match-card-info">
                     <div class="match-card-top">
-                        <h4>${pg.name}</h4>
+                        <h4 style="display:flex; align-items:center;">${displayName} ${customInfoBadge}</h4>
                         <span class="match-distance">${distLabel} · ${walkMin} min walk</span>
                     </div>
                     <div class="match-rating">

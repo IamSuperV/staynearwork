@@ -1,0 +1,26 @@
+[
+  {
+    "type": "pg",
+    "name": "Homtel Enterprises",
+    "landmark": "Eastsyde 77 and 79, Pant Nagar, Ghatkopar",
+    "capacity": "3",
+    "vacancies": "24",
+    "beds": [
+      "Single",
+      "Double",
+      "Triple"
+    ],
+    "facilities": [
+      "Wi-Fi",
+      "AC",
+      "Laundry",
+      "Gym",
+      "Parking",
+      "Security",
+      "Rooftop",
+      "Study Area"
+    ],
+    "id": "prov-1781616014116",
+    "createdAt": "2026-06-16T13:20:14.116Z"
+  }
+]
